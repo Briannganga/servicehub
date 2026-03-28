@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ServiceHub — Professional Services Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink: #0e0e0e;
+    --cream: #f5f0e8;
+    --gold: #c9a84c;
+    --gold-light: #e8d5a0;
+    --muted: #7a7060;
+    --white: #ffffff;
+    --card-bg: #faf7f2;
+    --border: #e0d8cc;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 4rem;
+    background: rgba(245,240,232,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; font-weight: 900;
+    color: var(--ink); text-decoration: none;
+    letter-spacing: -0.5px;
+  }
+  .nav-logo span { color: var(--gold); }
+  .nav-links { display: flex; gap: 2rem; align-items: center; }
+  .nav-links a {
+    text-decoration: none; color: var(--muted);
+    font-size: 0.9rem; font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--ink); }
+  .btn {
+    display: inline-block; text-decoration: none;
+    padding: 0.65rem 1.6rem; border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+    border: none;
+  }
+  .btn-outline {
+    border: 1.5px solid var(--ink); color: var(--ink);
+    background: transparent;
+  }
+  .btn-outline:hover { background: var(--ink); color: var(--cream); }
+  .btn-gold {
+    background: var(--gold); color: var(--white);
+  }
+  .btn-gold:hover { background: #b8943e; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 8rem 4rem 4rem;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -20%; right: -10%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-content { max-width: 640px; animation: fadeUp 0.8s ease both; }
+  .hero-tag {
+    display: inline-block;
+    font-size: 0.78rem; font-weight: 500; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+    border: 1px solid var(--gold-light);
+    padding: 0.3rem 0.9rem; border-radius: 2px;
+    margin-bottom: 1.8rem;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 900; line-height: 1.08;
+    letter-spacing: -1.5px;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .hero p {
+    font-size: 1.1rem; color: var(--muted); line-height: 1.7;
+    margin-bottom: 2.5rem; max-width: 480px;
+  }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .hero-image {
+    position: absolute; right: 4rem; top: 50%;
+    transform: translateY(-50%);
+    width: 420px; height: 500px;
+    background: var(--ink);
+    border-radius: 8px;
+    overflow: hidden;
+    animation: fadeIn 1s ease 0.3s both;
+  }
+  .hero-image-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr; height: 100%; gap: 3px;
+  }
+  .hero-img-cell {
+    background: var(--card-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.5rem;
+    transition: background 0.3s;
+  }
+  .hero-img-cell:hover { background: var(--gold-light); }
+  .hero-img-cell:nth-child(1) { background: #1a1a1a; color: white; font-family: 'Playfair Display', serif; font-size: 1rem; padding: 1.5rem; align-items: flex-end; }
+
+  /* STATS */
+  .stats {
+    background: var(--ink); color: var(--white);
+    padding: 3rem 4rem;
+    display: flex; justify-content: space-around; flex-wrap: wrap; gap: 2rem;
+  }
+  .stat { text-align: center; }
+  .stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem; font-weight: 900; color: var(--gold);
+    display: block;
+  }
+  .stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 0.3rem; }
+
+  /* SERVICES SECTION */
+  .section { padding: 6rem 4rem; }
+  .section-header { margin-bottom: 3.5rem; }
+  .section-tag {
+    font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--gold); font-weight: 500;
+    display: block; margin-bottom: 0.8rem;
+  }
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900; letter-spacing: -1px; line-height: 1.1;
+  }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  .service-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 2rem;
+    transition: all 0.3s; cursor: pointer;
+    position: relative; overflow: hidden;
+  }
+  .service-card::before {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: var(--gold); transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .service-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+  .service-card:hover::before { transform: scaleX(1); }
+  .service-icon { font-size: 2rem; margin-bottom: 1rem; }
+  .service-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem; margin-bottom: 0.6rem;
+  }
+  .service-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+  .service-price {
+    margin-top: 1.2rem; font-weight: 500;
+    color: var(--gold); font-size: 0.9rem;
+  }
+
+  /* HOW IT WORKS */
+  .how-section { background: var(--ink); color: var(--white); padding: 6rem 4rem; }
+  .how-section .section-tag { color: var(--gold); }
+  .how-section h2 { color: var(--white); }
+  .steps-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem; margin-top: 3rem;
+  }
+  .step { position: relative; padding-left: 1rem; }
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem; font-weight: 900; color: rgba(201,168,76,0.2);
+    line-height: 1; margin-bottom: 1rem; display: block;
+  }
+  .step h3 { font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--white); }
+  .step p { font-size: 0.88rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+  /* CTA */
+  .cta-section {
+    padding: 6rem 4rem; text-align: center;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .cta-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 900; letter-spacing: -1px;
+    margin-bottom: 1rem;
+  }
+  .cta-section p { color: var(--muted); margin-bottom: 2.5rem; font-size: 1.05rem; }
+  .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink); color: rgba(255,255,255,0.5);
+    padding: 2.5rem 4rem;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  footer .nav-logo { color: var(--white); }
+  footer p { font-size: 0.82rem; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .hero { padding: 7rem 1.5rem 4rem; }
+    .hero-image { display: none; }
+    .stats, .section, .how-section, .cta-section { padding: 4rem 1.5rem; }
+    footer { padding: 2rem 1.5rem; flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Service<span>Hub</span></a>
+  <div class="nav-links">
+    <a href="#services">Browse Services</a>
+    <a href="#how">How It Works</a>
+    <a href="/login.html" class="btn btn-outline">Log In</a>
+    <a href="/register.html" class="btn btn-gold">Get Started</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <span class="hero-tag">Professional Services Marketplace</span>
+    <h1>Find <em>skilled</em> professionals for every need</h1>
+    <p>Connect with verified experts for legal, design, tech, finance and more. Book, pay, and manage everything in one place.</p>
+    <div class="hero-actions">
+      <a href="/register.html" class="btn btn-gold">Find a Professional</a>
+      <a href="/register.html?role=provider" class="btn btn-outline">Offer Your Services</a>
+    </div>
+  </div>
+  <div class="hero-image">
+    <div class="hero-image-grid">
+      <div class="hero-img-cell" style="background:#1a1a1a;color:rgba(201,168,76,0.8);padding:1.5rem;align-items:flex-start;flex-direction:column;gap:0.5rem;">
+        <span style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;">Trusted by</span>
+        <span style="font-size:2rem;font-weight:900;color:var(--gold);">2,400+</span>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.4);">professionals</span>
+      </div>
+      <div class="hero-img-cell" style="background:rgba(201,168,76,0.12);font-size:3rem;">⚖️</div>
+      <div class="hero-img-cell" style="background:#f0ebe2;font-size:3rem;">💻</div>
+      <div class="hero-img-cell" style="background:#1a1a1a;font-size:3rem;">🎨</div>
+    </div>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="stat-number">2,400+</span><span class="stat-label">Verified Professionals</span></div>
+  <div class="stat"><span class="stat-number">12K+</span><span class="stat-label">Bookings Completed</span></div>
+  <div class="stat"><span class="stat-number">98%</span><span class="stat-label">Satisfaction Rate</span></div>
+  <div class="stat"><span class="stat-number">50+</span><span class="stat-label">Service Categories</span></div>
+</div>
+
+<section class="section" id="services">
+  <div class="section-header">
+    <span class="section-tag">What We Offer</span>
+    <h2>Services for every<br/>professional need</h2>
+  </div>
+  <div class="services-grid" id="services-grid">
+    <div class="service-card">
+      <div class="service-icon">⚖️</div>
+      <h3>Legal Consulting</h3>
+      <p>Contract review, business law, IP protection and more from certified attorneys.</p>
+      <div class="service-price">From $80 / hr</div>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">💻</div>
+      <h3>Software Development</h3>
+      <p>Web apps, mobile solutions, APIs and system integrations by expert developers.</p>
+      <div class="service-price">From $60 / hr</div>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🎨</div>
+      <h3>Design & Branding</h3>
+      <p>Logo design, UI/UX, brand identity and marketing materials that stand out.</p>
+      <div class="service-price">From $45 / hr</div>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">📊</div>
+      <h3>Financial Advisory</h3>
+      <p>Accounting, tax planning, investment advice and business financial strategy.</p>
+      <div class="service-price">From $70 / hr</div>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">📣</div>
+      <h3>Marketing & SEO</h3>
+      <p>Digital campaigns, content strategy, SEO audits and social media management.</p>
+      <div class="service-price">From $40 / hr</div>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🏗️</div>
+      <h3>Architecture & Engineering</h3>
+      <p>Building design, structural review, project management and civil consulting.</p>
+      <div class="service-price">From $90 / hr</div>
+    </div>
+  </div>
+</section>
+
+<section class="how-section" id="how">
+  <div class="section-header">
+    <span class="section-tag">Simple Process</span>
+    <h2>How ServiceHub works</h2>
+  </div>
+  <div class="steps-grid">
+    <div class="step"><span class="step-num">01</span><h3>Create an Account</h3><p>Sign up as a client looking for help, or as a provider ready to offer your expertise.</p></div>
+    <div class="step"><span class="step-num">02</span><h3>Browse Services</h3><p>Explore verified professionals by category, rating, availability and price range.</p></div>
+    <div class="step"><span class="step-num">03</span><h3>Book a Session</h3><p>Pick a time, describe your needs, and confirm the booking directly on the platform.</p></div>
+    <div class="step"><span class="step-num">04</span><h3>Get It Done</h3><p>Work with your professional, track progress and mark your booking complete.</p></div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <h2>Ready to get started?</h2>
+  <p>Join thousands of clients and professionals on ServiceHub today.</p>
+  <div class="cta-buttons">
+    <a href="/register.html" class="btn btn-gold">Create Free Account</a>
+    <a href="/login.html" class="btn btn-outline">Sign In</a>
+  </div>
+</section>
+
+<footer>
+  <a href="/" class="nav-logo">Service<span style="color:var(--gold)">Hub</span></a>
+  <p>© 2026 ServiceHub. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

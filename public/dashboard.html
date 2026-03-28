@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — ServiceHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink: #0e0e0e; --cream: #f5f0e8; --gold: #c9a84c;
+    --gold-light: #e8d5a0; --muted: #7a7060; --white: #ffffff;
+    --border: #e0d8cc; --card: #faf7f2;
+    --error: #c0392b; --success: #27ae60;
+    --sidebar-w: 240px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--ink);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; bottom: 0; left: 0;
+    z-index: 50;
+  }
+  .sidebar-logo {
+    padding: 1.8rem 1.5rem 1.2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .sidebar-logo a {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; font-weight: 900;
+    color: var(--white); text-decoration: none;
+  }
+  .sidebar-logo a span { color: var(--gold); }
+  .sidebar-user {
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex; align-items: center; gap: 0.8rem;
+  }
+  .user-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--gold); display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: 0.9rem;
+    color: var(--ink); flex-shrink: 0;
+  }
+  .user-info { overflow: hidden; }
+  .user-name { font-size: 0.88rem; font-weight: 500; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 0.75rem; color: var(--gold); text-transform: capitalize; }
+
+  .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+  .nav-section-label {
+    font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase;
+    color: rgba(255,255,255,0.25); padding: 0.8rem 1.5rem 0.4rem;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.7rem 1.5rem; cursor: pointer;
+    font-size: 0.88rem; color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    transition: all 0.15s; border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+  .nav-item.active { color: var(--white); border-left-color: var(--gold); background: rgba(201,168,76,0.08); }
+  .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+
+  .sidebar-bottom { padding: 1rem; border-top: 1px solid rgba(255,255,255,0.07); }
+  .logout-btn {
+    width: 100%; padding: 0.7rem;
+    background: transparent; border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 5px; color: rgba(255,255,255,0.5);
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .logout-btn:hover { background: rgba(255,255,255,0.05); color: var(--white); }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar-w); flex: 1; padding: 2.5rem 3rem; min-height: 100vh; }
+  .page { display: none; animation: fadeUp 0.3s ease both; }
+  .page.active { display: block; }
+
+  .page-header { margin-bottom: 2rem; }
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; font-weight: 900; letter-spacing: -0.5px;
+  }
+  .page-header p { color: var(--muted); font-size: 0.92rem; margin-top: 0.3rem; }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 2.5rem; }
+  .stat-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.5rem;
+  }
+  .stat-card .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+  .stat-card .stat-value { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 900; }
+  .stat-card .stat-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+
+  /* CARDS */
+  .card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.8rem; margin-bottom: 1.5rem;
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-weight: 700; margin-bottom: 1.2rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th { text-align: left; padding: 0.6rem 1rem; font-size: 0.75rem; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--card); }
+
+  /* BADGES */
+  .badge {
+    display: inline-block; padding: 0.25rem 0.65rem;
+    border-radius: 20px; font-size: 0.75rem; font-weight: 500;
+  }
+  .badge-pending { background: #fff8e6; color: #b7791f; }
+  .badge-confirmed { background: #e8f5e9; color: #2e7d32; }
+  .badge-completed { background: #e3f2fd; color: #1565c0; }
+  .badge-cancelled { background: #fce4ec; color: #c62828; }
+  .badge-provider { background: rgba(201,168,76,0.15); color: var(--gold); }
+  .badge-client { background: rgba(14,14,14,0.08); color: var(--ink); }
+
+  /* FORMS */
+  .form-group { margin-bottom: 1.2rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  label { display: block; font-size: 0.83rem; font-weight: 500; margin-bottom: 0.4rem; }
+  input[type="text"], input[type="number"], input[type="datetime-local"], textarea, select {
+    width: 100%; padding: 0.75rem 1rem;
+    border: 1.5px solid var(--border); border-radius: 5px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem;
+    background: var(--white); color: var(--ink);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .btn {
+    display: inline-block; padding: 0.65rem 1.4rem;
+    border-radius: 5px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 500; cursor: pointer;
+    transition: all 0.2s; border: none; text-decoration: none;
+  }
+  .btn-gold { background: var(--gold); color: var(--white); }
+  .btn-gold:hover { background: #b8943e; }
+  .btn-dark { background: var(--ink); color: var(--white); }
+  .btn-dark:hover { background: #222; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--ink); }
+  .btn-outline:hover { border-color: var(--ink); }
+  .btn-sm { padding: 0.4rem 0.9rem; font-size: 0.8rem; }
+  .btn-danger { background: #fdf2f2; color: var(--error); border: 1px solid #f5c6c6; }
+  .btn-danger:hover { background: var(--error); color: white; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ALERT */
+  .alert {
+    padding: 0.85rem 1rem; border-radius: 5px;
+    font-size: 0.88rem; margin-bottom: 1rem; display: none;
+  }
+  .alert.error { background: #fdf2f2; border: 1px solid #f5c6c6; color: var(--error); display: block; }
+  .alert.success { background: #f2fdf5; border: 1px solid #b7e4c7; color: var(--success); display: block; }
+
+  .empty-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.92rem; }
+  .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+
+  .spinner-inline {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 5px;
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; }
+    .sidebar-logo a span, .sidebar-logo a { font-size: 0; }
+    .sidebar-logo a::before { content: 'SH'; font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--white); }
+    .user-info, .nav-item span:not(.icon), .nav-section-label, .logout-btn { display: none; }
+    .nav-item { justify-content: center; padding: 0.8rem; }
+    .main { margin-left: 60px; padding: 1.5rem; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><a href="/">Service<span>Hub</span></a></div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="user-avatar">?</div>
+    <div class="user-info">
+      <div class="user-name" id="user-name">Loading...</div>
+      <div class="user-role" id="user-role">—</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item active" data-page="overview" href="#">
+      <span class="icon">📊</span><span>Overview</span>
+    </a>
+    <a class="nav-item" data-page="services" href="#">
+      <span class="icon">🔍</span><span>Browse Services</span>
+    </a>
+    <a class="nav-item" data-page="messages" href="#">
+      <span class="icon">💬</span><span>Messages</span>
+    </a>
+    <a class="nav-item" data-page="bookings" href="#">
+      <span class="icon">📅</span><span>My Bookings</span>
+    </a>
+    <div class="nav-section-label provider-only" style="display:none">Provider</div>
+    <a class="nav-item provider-only" data-page="my-services" href="#" style="display:none">
+      <span class="icon">💼</span><span>My Services</span>
+    </a>
+    <a class="nav-item provider-only" data-page="requests" href="#" style="display:none">
+      <span class="icon">📬</span><span>Booking Requests</span>
+    </a>
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" data-page="profile" href="#">
+      <span class="icon">👤</span><span>Profile</span>
+    </a>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="logout-btn" id="logout-btn">Sign Out</button>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- OVERVIEW PAGE -->
+  <div class="page active" id="page-overview">
+    <div class="page-header">
+      <h1 id="greeting">Dashboard</h1>
+      <p>Here's what's happening with your account.</p>
+    </div>
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="stat-label">Total Bookings</div><div class="stat-value" id="stat-bookings">—</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="stat-pending">—</div><div class="stat-sub">Awaiting confirmation</div></div>
+      <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value" id="stat-completed">—</div><div class="stat-sub">Successfully done</div></div>
+      <div class="stat-card provider-only" id="stat-services-card" style="display:none"><div class="stat-label">My Services</div><div class="stat-value" id="stat-services">—</div><div class="stat-sub">Listed</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Recent Activity</div>
+      <div id="recent-activity"><div class="empty-state"><div class="empty-icon">📭</div>Loading your activity...</div></div>
+    </div>
+  </div>
+
+  <!-- SERVICES PAGE -->
+  <div class="page" id="page-services">
+    <div class="page-header">
+      <h1>Browse Services</h1>
+      <p>Find professionals ready to help you.</p>
+    </div>
+    <div class="card">
+      <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+        <input type="text" id="search-input" placeholder="Search services..." style="flex:1;min-width:200px;"/>
+        <select id="category-filter" style="width:180px;">
+          <option value="">All Categories</option>
+          <option>Legal</option><option>Technology</option><option>Design</option>
+          <option>Finance</option><option>Marketing</option><option>Engineering</option>
+        </select>
+      </div>
+      <div id="services-list"><div class="empty-state"><div class="empty-icon">🔄</div>Loading services...</div></div>
+    </div>
+  </div>
+
+  <!-- BOOKINGS PAGE -->
+  <div class="page" id="page-bookings">
+    <div class="page-header">
+      <h1>My Bookings</h1>
+      <p>Track all your service bookings.</p>
+    </div>
+    <div class="alert" id="booking-alert"></div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Service</th><th>Provider/Client</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="bookings-table-body"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESSAGES PAGE -->
+  <div class="page" id="page-messages">
+    <div class="page-header">
+      <h1>Messages</h1>
+      <p>Chat privately with clients and providers.</p>
+    </div>
+    <div class="alert" id="messages-alert"></div>
+    <div class="card" style="margin-bottom:1.4rem;">
+      <div class="card-title">Send New Message</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>Recipient</label>
+          <select id="msg-recipient" style="width:100%;"></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Message</label><textarea id="msg-content" placeholder="Type your message..." rows="3"></textarea></div>
+      <button class="btn btn-gold" id="msg-send-btn">Send Message</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Conversation</div>
+      <div id="messages-list" class="table-wrap"><div class="empty-state"><div class="empty-icon">🕘</div>Loading messages...</div></div>
+    </div>
+  </div>
+
+  <!-- MY SERVICES (provider) -->
+  <div class="page" id="page-my-services">
+    <div class="page-header">
+      <h1>My Services</h1>
+      <p>Manage the services you offer.</p>
+    </div>
+    <div class="alert" id="service-alert"></div>
+    <div class="card">
+      <div class="card-title">Add New Service</div>
+      <form id="service-form">
+        <div class="form-row">
+          <div class="form-group"><label>Title *</label><input type="text" id="svc-title" placeholder="e.g. Contract Review" required/></div>
+          <div class="form-group"><label>Category</label>
+            <select id="svc-category">
+              <option value="">Select category</option>
+              <option>Legal</option><option>Technology</option><option>Design</option>
+              <option>Finance</option><option>Marketing</option><option>Engineering</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea id="svc-desc" placeholder="Describe what you offer..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>Price (KES) *</label><input type="number" id="svc-price" placeholder="0.00" min="0" step="0.01" required/></div>
+        </div>
+        <button type="submit" class="btn btn-gold" id="svc-submit-btn">Add Service</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="card-title">Your Listed Services</div>
+      <div id="my-services-list"><div class="empty-state"><div class="empty-icon">🔄</div>Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- BOOKING REQUESTS (provider) -->
+  <div class="page" id="page-requests">
+    <div class="page-header">
+      <h1>Booking Requests</h1>
+      <p>Review and manage incoming bookings for your services.</p>
+    </div>
+    <div class="alert" id="requests-alert"></div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Service</th><th>Client</th><th>Date</th><th>Notes</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="requests-table-body"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div class="page" id="page-profile">
+    <div class="page-header"><h1>Profile</h1><p>Your account information.</p></div>
+    <div class="card" style="max-width:480px;">
+      <div style="display:flex;align-items:center;gap:1.2rem;margin-bottom:1.8rem;">
+        <div class="user-avatar" id="profile-avatar" style="width:56px;height:56px;font-size:1.3rem;">?</div>
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;" id="profile-name">—</div>
+          <div style="font-size:0.85rem;color:var(--muted);" id="profile-email">—</div>
+          <span class="badge badge-provider" id="profile-role-badge">—</span>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:1.2rem;">
+        <p style="font-size:0.85rem;color:var(--muted);">Member since</p>
+        <p style="font-weight:500;margin-top:0.2rem;" id="profile-since">—</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- BOOK SERVICE MODAL -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--white);border-radius:10px;padding:2rem;width:100%;max-width:460px;margin:1rem;animation:fadeUp 0.3s ease;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.3rem;">Book Service</h2>
+      <button onclick="closeModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted);">×</button>
+    </div>
+    <div class="alert" id="modal-alert"></div>
+    <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1.2rem;" id="modal-service-name"></p>
+    <div class="form-group"><label>Booking Date & Time *</label><input type="datetime-local" id="modal-date"/></div>
+    <div class="form-group"><label>Notes (optional)</label><textarea id="modal-notes" placeholder="Describe your needs..."></textarea></div>
+    <div style="display:flex;gap:0.8rem;margin-top:1rem;">
+      <button class="btn btn-gold" style="flex:1;" id="modal-submit-btn" onclick="submitBooking()">Confirm Booking</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div id="review-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--white);border-radius:10px;padding:2rem;width:100%;max-width:460px;margin:1rem;animation:fadeUp 0.3s ease;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.3rem;">Review Provider</h2>
+      <button onclick="closeReviewModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted);">×</button>
+    </div>
+    <div class="alert" id="review-modal-alert"></div>
+    <p style="margin-bottom:1rem;color:var(--muted);" id="review-modal-provider">Provider:</p>
+    <div class="form-group"><label>Star rating (1-5)</label>
+      <select id="review-rating" style="width:100%;">
+        <option value="">Select rating</option>
+        <option value="1">1 - Poor</option>
+        <option value="2">2 - Fair</option>
+        <option value="3">3 - Good</option>
+        <option value="4">4 - Very good</option>
+        <option value="5">5 - Excellent</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Your comment</label><textarea id="review-comment" placeholder="Why did you give this rating?" rows="3"></textarea></div>
+    <div style="display:flex;gap:0.8rem;margin-top:1rem;">
+      <button class="btn btn-gold" style="flex:1;" id="review-submit-btn" onclick="submitReview()">Submit Review</button>
+      <button class="btn btn-outline" onclick="closeReviewModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Auth guard
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!token || !user) { window.location.href = '/login.html'; }
+
+  const isProvider = user && user.role === 'provider';
+
+  // Init UI
+  document.getElementById('user-name').textContent = user?.name || 'User';
+  document.getElementById('user-role').textContent = user?.role || '';
+  document.getElementById('user-avatar').textContent = (user?.name || 'U')[0].toUpperCase();
+  document.getElementById('greeting').textContent = `Welcome, ${user?.name?.split(' ')[0] || 'there'} 👋`;
+  document.getElementById('profile-name').textContent = user?.name || '—';
+  document.getElementById('profile-email').textContent = user?.email || '—';
+  document.getElementById('profile-avatar').textContent = (user?.name || 'U')[0].toUpperCase();
+  document.getElementById('profile-role-badge').textContent = user?.role || '—';
+
+  // Show provider nav items
+  if (isProvider) {
+    document.querySelectorAll('.provider-only').forEach(el => el.style.display = '');
+    document.getElementById('stat-services-card').style.display = '';
+  }
+
+  // Navigation
+  document.querySelectorAll('.nav-item[data-page]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      navigateTo(link.dataset.page);
+    });
+  });
+
+  function navigateTo(pageId) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.nav-item[data-page="${pageId}"]`)?.classList.add('active');
+    const page = document.getElementById('page-' + pageId);
+    if (page) { page.classList.add('active'); }
+    loadPage(pageId);
+  }
+
+  function loadPage(pageId) {
+    if (pageId === 'overview') loadOverview();
+    if (pageId === 'services') loadServices();
+    if (pageId === 'messages') loadMessages();
+    if (pageId === 'bookings') loadBookings();
+    if (pageId === 'my-services') loadMyServices();
+    if (pageId === 'requests') loadRequests();
+    if (pageId === 'profile') loadProfile();
+  }
+
+  async function apiFetch(url, options = {}) {
+    const res = await fetch(url, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(options.headers || {}) }
+    });
+    if (res.status === 401 || res.status === 403) { localStorage.clear(); window.location.href = '/login.html'; }
+    return res;
+  }
+
+  function statusBadge(status) {
+    return `<span class="badge badge-${status}">${status}</span>`;
+  }
+
+  function renderStars(rating) {
+    const value = Math.round(rating);
+    return Array.from({ length: 5 }, (_, i) => i < value ? '★' : '☆').join('');
+  }
+
+  function formatDate(dt) {
+    return new Date(dt).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  // OVERVIEW
+  async function loadOverview() {
+    try {
+      const res = await apiFetch('/api/bookings');
+      const bookings = await res.json();
+      document.getElementById('stat-bookings').textContent = bookings.length;
+      document.getElementById('stat-pending').textContent = bookings.filter(b => b.status === 'pending').length;
+      document.getElementById('stat-completed').textContent = bookings.filter(b => b.status === 'completed').length;
+
+      const recent = bookings.slice(0, 5);
+      const el = document.getElementById('recent-activity');
+      if (recent.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>No bookings yet. <a href="#" onclick="navigateTo(\'services\');return false;" style="color:var(--gold)">Browse services →</a></div>';
+        return;
+      }
+      el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>Service</th><th>${isProvider ? 'Client' : 'Provider'}</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>${recent.map(b => `<tr>
+          <td>${b.service_title || '—'}</td>
+          <td>${isProvider ? (b.client_name || '—') : (b.provider_name || '—')}</td>
+          <td>${formatDate(b.booking_date)}</td>
+          <td>${statusBadge(b.status)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+
+      if (isProvider) {
+        const svcRes = await apiFetch('/api/services');
+        const svcs = await svcRes.json();
+        const mine = svcs.filter(s => s.provider_id === user.id);
+        document.getElementById('stat-services').textContent = mine.length;
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  // SERVICES
+  let allServices = [];
+  async function loadServices() {
+    const el = document.getElementById('services-list');
+    try {
+      const res = await apiFetch('/api/services');
+      if (!res.ok) throw new Error('Failed to fetch services');
+      allServices = await res.json();
+      renderServices(allServices);
+    } catch (e) {
+      console.error(e);
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div>Failed to load services.</div>';
+    }
+  }
+
+  function renderServices(list) {
+    const el = document.getElementById('services-list');
+    if (list.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div>No services found.</div>'; return;
+    }
+    el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;">
+      ${list.map(s => `<div style="border:1px solid var(--border);border-radius:8px;padding:1.5rem;background:var(--card);transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow=''">
+        <div style="font-size:0.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;">${s.category || 'General'}</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin-bottom:0.4rem;">${s.title}</div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:0.8rem;line-height:1.5;">${s.description || 'No description provided.'}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
+          <div>
+            <div style="font-weight:600;color:var(--ink);">KES ${Number(s.price).toLocaleString()}</div>
+            <div style="font-size:0.75rem;color:var(--muted);">by ${s.provider_name || 'Unknown'}</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;">
+              ${(() => {
+                const avg = parseFloat(s.provider_avg_rating) || 0;
+                const count = parseInt(s.provider_review_count, 10) || 0;
+                return `<span style="color:#f1c40f;">${renderStars(avg)}</span> ${avg.toFixed(1)} (${count})`;
+              })()}
+            </div>
+          </div>
+          <div style="display:flex;gap:0.4rem;align-items:center;">
+            ${s.user_id !== user.id ? `<button class="btn btn-gold btn-sm" onclick="openBooking(${s.id}, '${s.title.replace(/'/g, "\\'")}')">Book</button>` : '<span style="font-size:0.78rem;color:var(--muted);">Your service</span>'}
+            ${s.user_id !== user.id ? `<button class="btn btn-outline btn-sm" onclick="openReviewModal(${s.user_id}, '${(s.provider_name||'').replace(/'/g, "\\'")}')">Review</button>` : ''}
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  document.getElementById('search-input').addEventListener('input', filterServices);
+  document.getElementById('category-filter').addEventListener('change', filterServices);
+  function filterServices() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    const cat = document.getElementById('category-filter').value;
+    const filtered = allServices.filter(s =>
+      (!q || s.title.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q)) &&
+      (!cat || s.category === cat)
+    );
+    renderServices(filtered);
+  }
+
+  // BOOKINGS (client view)
+  async function loadBookings() {
+    const tbody = document.getElementById('bookings-table-body');
+    try {
+      const res = await apiFetch('/api/bookings');
+      const bookings = await res.json();
+      if (bookings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📅</div>No bookings yet. <a href="#" onclick="navigateTo('services');return false;" style="color:var(--gold)">Browse services →</a></div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = bookings.map(b => `<tr>
+        <td><strong>${b.service_title || '—'}</strong></td>
+        <td>${isProvider ? (b.client_name || '—') : (b.provider_name || '—')}</td>
+        <td>${formatDate(b.booking_date)}</td>
+        <td>${statusBadge(b.status)}</td>
+        <td>
+          ${!isProvider && b.status === 'pending' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>` : ''}
+          ${isProvider ? `<select onchange="updateStatus(${b.id}, this.value)" style="padding:0.3rem 0.5rem;font-size:0.8rem;border:1px solid var(--border);border-radius:4px;">
+            <option value="">Update</option>
+            <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirm</option>
+            <option value="completed" ${b.status==='completed'?'selected':''}>Complete</option>
+            <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancel</option>
+          </select>` : ''}
+        </td>
+      </tr>`).join('');
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--error)">Failed to load bookings.</td></tr>';
+    }
+  }
+
+  async function cancelBooking(id) {
+    if (!confirm('Cancel this booking?')) return;
+    try {
+      await apiFetch(`/api/bookings/${id}`, { method: 'DELETE' });
+      loadBookings(); loadOverview();
+    } catch (e) {}
+  }
+
+  async function updateStatus(id, status) {
+    if (!status) return;
+    try {
+      await apiFetch(`/api/bookings/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+      loadBookings(); loadOverview();
+    } catch (e) {}
+  }
+
+  // MY SERVICES (provider)
+  async function loadMyServices() {
+    const el = document.getElementById('my-services-list');
+    try {
+      const res = await apiFetch('/api/services');
+      const all = await res.json();
+      const mine = all.filter(s => s.provider_id === user.id);
+      if (mine.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon">💼</div>No services yet. Add one above.</div>'; return;
+      }
+      el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>Title</th><th>Category</th><th>Price</th><th>Action</th></tr></thead>
+        <tbody>${mine.map(s => `<tr>
+          <td><strong>${s.title}</strong><br/><span style="font-size:0.78rem;color:var(--muted)">${s.description || ''}</span></td>
+          <td>${s.category || '—'}</td>
+          <td>KES ${Number(s.price).toLocaleString()}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteService(${s.id})">Delete</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+    } catch (e) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div>Failed to load.</div>'; }
+  }
+
+  document.getElementById('service-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('svc-submit-btn');
+    const alert = document.getElementById('service-alert');
+    alert.className = 'alert';
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Saving...';
+    try {
+      const res = await apiFetch('/api/services', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: document.getElementById('svc-title').value,
+          description: document.getElementById('svc-desc').value,
+          price: document.getElementById('svc-price').value,
+          category: document.getElementById('svc-category').value,
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) { alert.textContent = data.message || 'Failed'; alert.className = 'alert error'; return; }
+      alert.textContent = 'Service added!'; alert.className = 'alert success';
+      document.getElementById('service-form').reset();
+      loadMyServices();
+    } catch (e) { alert.textContent = 'Network error'; alert.className = 'alert error'; }
+    finally { btn.disabled = false; btn.textContent = 'Add Service'; }
+  });
+
+  async function deleteService(id) {
+    if (!confirm('Delete this service?')) return;
+    await apiFetch(`/api/services/${id}`, { method: 'DELETE' });
+    loadMyServices(); loadOverview();
+  }
+
+  // REQUESTS (provider)
+  async function loadRequests() {
+    const tbody = document.getElementById('requests-table-body');
+    try {
+      const res = await apiFetch('/api/bookings');
+      const bookings = await res.json();
+      if (bookings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📬</div>No booking requests yet.</div></td></tr>`; return;
+      }
+      tbody.innerHTML = bookings.map(b => `<tr>
+        <td><strong>${b.service_title}</strong></td>
+        <td>${b.client_name || '—'}</td>
+        <td>${formatDate(b.booking_date)}</td>
+        <td style="max-width:150px;font-size:0.82rem;color:var(--muted)">${b.notes || '—'}</td>
+        <td>${statusBadge(b.status)}</td>
+        <td>
+          <select onchange="updateStatus(${b.id}, this.value);loadRequests();" style="padding:0.3rem 0.5rem;font-size:0.8rem;border:1px solid var(--border);border-radius:4px;">
+             <option value="">Update</option>
+            <option value="confirmed">Confirm</option>
+            <option value="completed">Complete</option>
+            <option value="cancelled">Cancel</option>
+          </select>
+        </td>
+      </tr>`).join('');
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--error)">Failed to load.</td></tr>';
+    }
+  }
+
+  // MESSAGES
+  async function loadMessages() {
+    const alert = document.getElementById('messages-alert');
+    const list = document.getElementById('messages-list');
+    alert.className = 'alert';
+    try {
+      const usersRes = await apiFetch('/api/auth/users');
+      const users = await usersRes.json();
+      const recipientSelect = document.getElementById('msg-recipient');
+      recipientSelect.innerHTML = '<option value="">Select recipient</option>' + users
+        .filter(u => u.id !== user.id)
+        .map(u => `<option value="${u.id}">${u.name} (${u.role})</option>`)
+        .join('');
+
+      const msgsRes = await apiFetch('/api/messages');
+      const messages = await msgsRes.json();
+      if (messages.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div>No messages yet.</div>';
+      } else {
+        list.innerHTML = `<table><thead><tr><th>From</th><th>To</th><th>Message</th><th>Sent</th><th>Status</th></tr></thead><tbody>${messages.map(m => `<tr>
+          <td>${m.sender_name}</td>
+          <td>${m.receiver_name}</td>
+          <td>${m.message}</td>
+          <td>${formatDate(m.sent_at)}</td>
+          <td>${m.sender_id===user.id ? '<span class="badge badge-provider">sent</span>' : '<span class="badge badge-client">received</span>'}</td>
+        </tr>`).join('')}</tbody></table>`;
+      }
+    } catch (e) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div>Unable to load messages.</div>';
+      alert.textContent = 'Cannot load messages right now.';
+      alert.className = 'alert error';
+      console.error(e);
+    }
+  }
+
+  document.getElementById('msg-send-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('msg-send-btn');
+    const alert = document.getElementById('messages-alert');
+    const recipient = document.getElementById('msg-recipient').value;
+    const content = document.getElementById('msg-content').value.trim();
+
+    alert.className = 'alert';
+    if (!recipient || !content) {
+      alert.textContent = 'Please select a recipient and write a message.';
+      alert.className = 'alert error';
+      return;
+    }
+
+    btn.disabled = true;
+    try {
+      const res = await apiFetch('/api/messages', {
+        method: 'POST',
+        body: JSON.stringify({ receiver_id: Number(recipient), message: content })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert.textContent = data.message || 'Message failed.';
+        alert.className = 'alert error';
+      } else {
+        alert.textContent = 'Message sent!';
+        alert.className = 'alert success';
+        document.getElementById('msg-content').value = '';
+        loadMessages();
+      }
+    } catch (e) {
+      alert.textContent = 'Network error while sending message.';
+      alert.className = 'alert error';
+      console.error(e);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // PROFILE
+  async function loadProfile() {
+    try {
+      const res = await apiFetch('/api/auth/me');
+      const data = await res.json();
+      document.getElementById('profile-name').textContent = data.name;
+      document.getElementById('profile-email').textContent = data.email;
+      document.getElementById('profile-avatar').textContent = data.name[0].toUpperCase();
+      document.getElementById('profile-role-badge').textContent = data.role;
+      document.getElementById('profile-since').textContent = new Date(data.created_at).toLocaleDateString('en-KE', { dateStyle: 'long' });
+    } catch (e) {}
+  }
+
+  // BOOKING MODAL
+  let activeServiceId = null;
+  function openBooking(serviceId, serviceName) {
+    activeServiceId = serviceId;
+    document.getElementById('modal-service-name').textContent = `Service: ${serviceName}`;
+    document.getElementById('modal-alert').className = 'alert';
+    document.getElementById('modal-date').value = '';
+    document.getElementById('modal-notes').value = '';
+    const overlay = document.getElementById('modal-overlay');
+    overlay.style.display = 'flex';
+  }
+  function closeModal() {
+    document.getElementById('modal-overlay').style.display = 'none';
+    activeServiceId = null;
+  }
+  async function submitBooking() {
+    const btn = document.getElementById('modal-submit-btn');
+    const alertEl = document.getElementById('modal-alert');
+    const date = document.getElementById('modal-date').value;
+    const notes = document.getElementById('modal-notes').value;
+    alertEl.className = 'alert';
+    if (!date) { alertEl.textContent = 'Please select a date.'; alertEl.className = 'alert error'; return; }
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Booking...';
+    try {
+      const res = await apiFetch('/api/bookings', {
+        method: 'POST',
+        body: JSON.stringify({ service_id: activeServiceId, booking_date: date, notes })
+      });
+      const data = await res.json();
+      if (!res.ok) { alertEl.textContent = data.message || 'Failed'; alertEl.className = 'alert error'; return; }
+      alertEl.textContent = 'Booking confirmed! ✓'; alertEl.className = 'alert success';
+      setTimeout(() => { closeModal(); navigateTo('bookings'); }, 1200);
+    } catch (e) { alertEl.textContent = 'Network error.'; alertEl.className = 'alert error'; }
+    finally { btn.disabled = false; btn.textContent = 'Confirm Booking'; }
+  }
+
+  let activeReviewProviderId = null;
+  function openReviewModal(providerId, providerName) {
+    activeReviewProviderId = providerId;
+    document.getElementById('review-modal-provider').textContent = `Provider: ${providerName}`;
+    document.getElementById('review-rating').value = '';
+    document.getElementById('review-comment').value = '';
+    document.getElementById('review-modal-alert').className = 'alert';
+    document.getElementById('review-modal-overlay').style.display = 'flex';
+  }
+
+  function closeReviewModal() {
+    document.getElementById('review-modal-overlay').style.display = 'none';
+    activeReviewProviderId = null;
+  }
+
+  async function submitReview() {
+    const btn = document.getElementById('review-submit-btn');
+    const alertEl = document.getElementById('review-modal-alert');
+    const rating = Number(document.getElementById('review-rating').value);
+    const comment = document.getElementById('review-comment').value.trim();
+
+    alertEl.className = 'alert';
+    if (!activeReviewProviderId || !rating || rating < 1 || rating > 5) {
+      alertEl.textContent = 'Please select a star rating.';
+      alertEl.className = 'alert error';
+      return;
+    }
+
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Submitting...';
+    try {
+      const response = await apiFetch('/api/reviews', {
+        method: 'POST',
+        body: JSON.stringify({ provider_id: activeReviewProviderId, rating, comment })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alertEl.textContent = data.message || 'Review failed.';
+        alertEl.className = 'alert error';
+      } else {
+        alertEl.textContent = 'Review submitted successfully!';
+        alertEl.className = 'alert success';
+        setTimeout(() => { closeReviewModal(); loadServices(); }, 1200);
+      }
+    } catch (e) {
+      alertEl.textContent = 'Network error while submitting review.';
+      alertEl.className = 'alert error';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Submit Review';
+    }
+  }
+
+  // Close modal on overlay click
+  document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+  // LOGOUT
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    localStorage.clear(); window.location.href = '/login.html';
+  });
+
+  // Initial load
+  loadOverview();
+</script>
+</body>
+</html>

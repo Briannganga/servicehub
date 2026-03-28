@@ -1,0 +1,24 @@
+Server starting...
+
+=== LOADING ROUTES ===
+Loading authRoutes...
+  authRoutes loaded, type: function, constructor: Function
+  ✓ authRoutes mounted to /api/auth
+Loading serviceRoutes...
+  serviceRoutes loaded, type: function, constructor: Function
+  ✓ serviceRoutes mounted to /api/services
+Loading bookingRoutes...
+  bookingRoutes loaded, type: function, constructor: Function
+  ✓ bookingRoutes mounted to /api/bookings
+Loading messagesRoutes...
+  messagesRoutes loaded, type: function, constructor: Function
+  ✓ messagesRoutes mounted to /api/messages
+Loading reviewRoutes...
+  reviewRoutes loaded, type: function, constructor: Function
+  ✓ reviewRoutes mounted to /api/reviews
+=== ROUTES LOADING COMPLETE ===
+
+Server running on port 5000
+
+=== ROUTES INFORMATION ===
+app._router not yet initialized (will be created on first request)

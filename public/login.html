@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sign In — ServiceHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink: #0e0e0e;
+    --cream: #f5f0e8;
+    --gold: #c9a84c;
+    --gold-light: #e8d5a0;
+    --muted: #7a7060;
+    --white: #ffffff;
+    --border: #e0d8cc;
+    --error: #c0392b;
+    --success: #27ae60;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    width: 45%; background: var(--ink);
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+    padding: 3rem;
+    position: relative; overflow: hidden;
+  }
+  .left-panel::before {
+    content: '';
+    position: absolute; bottom: -100px; left: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(201,168,76,0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .panel-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; font-weight: 900;
+    color: var(--white); text-decoration: none;
+  }
+  .panel-logo span { color: var(--gold); }
+  .panel-quote {
+    position: relative; z-index: 1;
+  }
+  .panel-quote blockquote {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem; font-weight: 700;
+    color: var(--white); line-height: 1.3;
+    margin-bottom: 1.5rem;
+  }
+  .panel-quote blockquote em { color: var(--gold); font-style: italic; }
+  .panel-testimonial {
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .testimonial-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--gold); display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: 1rem; color: var(--ink);
+    flex-shrink: 0;
+  }
+  .testimonial-text { font-size: 0.83rem; color: rgba(255,255,255,0.5); line-height: 1.5; }
+  .testimonial-text strong { color: rgba(255,255,255,0.8); display: block; margin-bottom: 0.1rem; }
+  .panel-bottom { font-size: 0.78rem; color: rgba(255,255,255,0.3); }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 3rem 2rem;
+  }
+  .form-container {
+    width: 100%; max-width: 420px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .form-container h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem; font-weight: 900;
+    letter-spacing: -0.5px; margin-bottom: 0.5rem;
+  }
+  .form-container .subtitle {
+    color: var(--muted); font-size: 0.92rem; margin-bottom: 2.5rem;
+  }
+  .form-container .subtitle a { color: var(--gold); text-decoration: none; font-weight: 500; }
+  .form-container .subtitle a:hover { text-decoration: underline; }
+
+  .form-group { margin-bottom: 1.3rem; }
+  label {
+    display: block; font-size: 0.83rem; font-weight: 500;
+    margin-bottom: 0.5rem; color: var(--ink);
+  }
+  input[type="email"], input[type="password"], input[type="text"] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    background: var(--white);
+    color: var(--ink);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+  }
+  .form-footer-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .remember-me { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer; }
+  .remember-me input { width: auto; }
+  .forgot-link { font-size: 0.85rem; color: var(--gold); text-decoration: none; }
+  .forgot-link:hover { text-decoration: underline; }
+
+  .btn-submit {
+    width: 100%; padding: 0.9rem;
+    background: var(--ink); color: var(--white);
+    border: none; border-radius: 5px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+    position: relative;
+  }
+  .btn-submit:hover { background: #222; transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .divider {
+    display: flex; align-items: center; gap: 1rem;
+    margin: 1.5rem 0; color: var(--muted); font-size: 0.82rem;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .alert {
+    padding: 0.85rem 1rem; border-radius: 5px;
+    font-size: 0.88rem; margin-bottom: 1.2rem;
+    display: none;
+  }
+  .alert.error { background: #fdf2f2; border: 1px solid #f5c6c6; color: var(--error); display: block; }
+  .alert.success { background: #f2fdf5; border: 1px solid #b7e4c7; color: var(--success); display: block; }
+
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .left-panel { display: none; }
+    .right-panel { padding: 2rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="left-panel">
+  <a href="/" class="panel-logo">Service<span>Hub</span></a>
+  <div class="panel-quote">
+    <blockquote>"The easiest way to find <em>trusted</em> professionals for any job."</blockquote>
+    <div class="panel-testimonial">
+      <div class="testimonial-avatar">JM</div>
+      <div class="testimonial-text">
+        <strong>Gregory Oyuga</strong>
+        Booked 3 services this month — all excellent
+      </div>
+    </div>
+  </div>
+  <div class="panel-bottom">© 2026 ServiceHub</div>
+</div>
+
+<div class="right-panel">
+  <div class="form-container">
+    <h1>Welcome back</h1>
+    <p class="subtitle">Don't have an account? <a href="/register.html">Sign up free</a></p>
+
+    <div class="alert" id="alert"></div>
+
+    <form id="login-form" novalidate>
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" placeholder="you@example.com" required autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password"/>
+      </div>
+      <div class="form-footer-row">
+        <label class="remember-me">
+          <input type="checkbox" id="remember"/> Remember me
+        </label>
+        <a href="#" class="forgot-link">Forgot password?</a>
+      </div>
+      <button type="submit" class="btn-submit" id="submit-btn">Sign In</button>
+    </form>
+
+    <div class="divider">or</div>
+    <p style="text-align:center;font-size:0.85rem;color:var(--muted);">
+      Are you a professional? <a href="/register.html?role=provider" style="color:var(--gold);text-decoration:none;font-weight:500;">Join as a provider →</a>
+    </p>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('login-form');
+  const alertBox = document.getElementById('alert');
+  const submitBtn = document.getElementById('submit-btn');
+
+  function showAlert(msg, type) {
+    alertBox.textContent = msg;
+    alertBox.className = 'alert ' + type;
+  }
+
+  function setLoading(loading) {
+    if (loading) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span>Signing in...';
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Sign In';
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertBox.className = 'alert';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) {
+      showAlert('Please fill in all fields.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAlert(data.message || 'Login failed. Please try again.', 'error');
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      showAlert('Login successful! Redirecting...', 'success');
+      setTimeout(() => window.location.href = '/dashboard.html', 1000);
+    } catch (err) {
+      showAlert('Network error. Is the server running?', 'error');
+    } finally {
+      setLoading(false);
+    }
+  });
+</script>
+</body>
+</html>
