@@ -3,6 +3,7 @@ require("dotenv").config(); // Load env vars first
 const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
 const path = require("path");
 const fs = require("fs");
 
@@ -46,8 +47,24 @@ const apiLimiter = rateLimit({
     message: { message: "Too many requests, please slow down." },
 });
 
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
+    : [];
+
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+}
+
+app.use(helmet());
+app.use(
+    cors({
+        origin: allowedOrigins.length ? allowedOrigins : true,
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        credentials: true,
+    })
+);
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use("/api/auth", authLimiter);
 app.use("/api", apiLimiter);
 
@@ -145,9 +162,18 @@ app.get("/debug/routes", (req, res) => {
         } else {
             res.json({ error: "Routes not yet initialized" });
         }
-    } catch(e) {
-        res.status(500).json({error: e.message});
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
+});
+
+app.use((req, res) => {
+    res.status(404).json({ message: "Not found." });
+});
+
+app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    res.status(500).json({ message: "Internal server error." });
 });
 
 // Start server
