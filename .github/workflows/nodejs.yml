@@ -1,0 +1,46 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test123
+          POSTGRES_DB: service_hub
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready -U postgres -d service_hub
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:test123@localhost:5432/service_hub
+      JWT_SECRET: testsecret
+      ALLOWED_ORIGINS: http://localhost:5000
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Wait for Postgres
+        run: |
+          for i in $(seq 1 15); do
+            pg_isready -h localhost -p 5432 -U postgres -d service_hub && break
+            echo "Waiting for Postgres..."
+            sleep 2
+          done
+      - run: npm run migrate
+      - run: npm run lint
+      - run: npm test
