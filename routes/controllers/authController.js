@@ -3,12 +3,29 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+};
+
+const validRoles = ["client", "provider"];
+
 // POST /api/auth/register
 const register = async (req, res) => {
     const { name, email, password, role } = req.body;
 
+    const normalizedRole = validRoles.includes(role) ? role : "client";
+
     if (!name || !email || !password) {
         return res.status(400).json({ message: "Name, email, and password are required." });
+    }
+
+    if (!validateEmail(email)) {
+        return res.status(400).json({ message: "Please provide a valid email address." });
+    }
+
+    if (password.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters long." });
     }
 
     try {
@@ -19,7 +36,7 @@ const register = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const userRole = role || "client"; // default role
+        const userRole = normalizedRole;
 
         const result = await pool.query(
             "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role",

@@ -67,15 +67,25 @@ const getServiceById = async (req, res) => {
 const createService = async (req, res) => {
     const { title, description, price, category } = req.body;
     const user_id = req.user.id;
+    const requesterRole = req.user.role;
 
-    if (!title || !price) {
+    if (requesterRole !== "provider") {
+        return res.status(403).json({ message: "Only providers can create services." });
+    }
+
+    if (!title || price === undefined || price === null) {
         return res.status(400).json({ message: "Title and price are required." });
+    }
+
+    const parsedPrice = Number(price);
+    if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
+        return res.status(400).json({ message: "Price must be a positive number." });
     }
 
     try {
         const result = await pool.query(
             "INSERT INTO services (title, description, price, category, user_id, provider_id) VALUES ($1, $2, $3, $4, $5, $5) RETURNING *",
-            [title, description, price, category, user_id]
+            [title, description, parsedPrice, category, user_id]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {

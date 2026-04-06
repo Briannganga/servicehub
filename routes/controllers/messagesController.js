@@ -52,6 +52,10 @@ const sendMessage = async (req, res) => {
     }
 
     try {
+        if (sender_id === receiver_id) {
+            return res.status(400).json({ message: "You cannot send a message to yourself." });
+        }
+
         const receiverCheck = await pool.query("SELECT id FROM users WHERE id = $1", [receiver_id]);
         if (!receiverCheck.rows.length) {
             return res.status(404).json({ message: "Receiver not found." });

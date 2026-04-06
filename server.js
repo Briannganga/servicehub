@@ -2,8 +2,20 @@ require("dotenv").config(); // Load env vars first
 
 const express = require("express");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 const path = require("path");
 const fs = require("fs");
+
+const requiredEnv = ["JWT_SECRET"];
+if (!process.env.DATABASE_URL) {
+    requiredEnv.push("DB_HOST", "DB_USER", "DB_NAME", "DB_PASSWORD");
+}
+const missingEnv = requiredEnv.filter((name) => !process.env[name]);
+if (missingEnv.length > 0) {
+    console.error("Missing required environment variables:", missingEnv.join(", "));
+    process.exit(1);
+}
+
 const pool = require("./config/db");
 
 const app = express();
@@ -19,30 +31,38 @@ function log(msg) {
 fs.writeFileSync(logFile, 'Server starting...\n');
 
 // Middleware
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 8,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many requests from this IP, please try again later." },
+});
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many requests, please slow down." },
+});
+
 app.use(cors());
 app.use(express.json());
+app.use("/api/auth", authLimiter);
+app.use("/api", apiLimiter);
 
 // Static files for frontend
 const publicDir = path.join(__dirname, "public");
 app.use(express.static(publicDir));
 
-// Auto-create `reviews` table when missing (safe, idempotent)
+// Auto-create database tables when missing (safe, idempotent)
 (async () => {
     try {
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS reviews (
-                id SERIAL PRIMARY KEY,
-                reviewer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                provider_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                service_id INTEGER REFERENCES services(id) ON DELETE SET NULL,
-                rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-                comment TEXT,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            );
-        `);
-        console.log('reviews table ready');
+        const setupDatabase = require('./setup-db');
+        await setupDatabase();
     } catch (err) {
-        console.error('Failed to create reviews table:', err);
+        console.error('Database setup failed:', err);
+        process.exit(1); // Exit if database setup fails
     }
 })();
 

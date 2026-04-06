@@ -45,14 +45,27 @@ const createBooking = async (req, res) => {
     }
 
     try {
-        const service = await pool.query("SELECT id FROM services WHERE id = $1", [service_id]);
+        const service = await pool.query("SELECT id, user_id FROM services WHERE id = $1", [service_id]);
         if (service.rows.length === 0) {
             return res.status(404).json({ message: "Service not found." });
         }
 
+        const serviceOwnerId = service.rows[0].user_id;
+        if (serviceOwnerId === client_id) {
+            return res.status(400).json({ message: "You cannot book your own service." });
+        }
+
+        const bookingDate = booking_date ? new Date(booking_date) : new Date();
+        if (isNaN(bookingDate.getTime())) {
+            return res.status(400).json({ message: "Invalid booking date." });
+        }
+        if (bookingDate < new Date()) {
+            return res.status(400).json({ message: "Booking date must be in the future." });
+        }
+
         const result = await pool.query(
             "INSERT INTO bookings (client_id, service_id, booking_date, notes, status) VALUES ($1, $2, $3, $4, 'pending') RETURNING *",
-            [client_id, service_id, booking_date || new Date(), notes || null]
+            [client_id, service_id, bookingDate, notes || null]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
@@ -72,11 +85,26 @@ const updateBookingStatus = async (req, res) => {
     }
 
     try {
+        const booking = await pool.query(
+            `SELECT b.*, s.user_id AS provider_id
+             FROM bookings b
+             JOIN services s ON b.service_id = s.id
+             WHERE b.id = $1`,
+            [id]
+        );
+
+        if (booking.rows.length === 0) return res.status(404).json({ message: "Booking not found." });
+
+        const bookingRow = booking.rows[0];
+        const requester = req.user.id;
+        if (bookingRow.client_id !== requester && bookingRow.provider_id !== requester) {
+            return res.status(403).json({ message: "Forbidden." });
+        }
+
         const result = await pool.query(
             "UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *",
             [status, id]
         );
-        if (result.rows.length === 0) return res.status(404).json({ message: "Booking not found." });
         res.json(result.rows[0]);
     } catch (err) {
         console.error("UpdateBookingStatus error:", err);

@@ -24,10 +24,29 @@ const createReview = async (req, res) => {
     }
 
     const serviceCheck = service_id
-      ? await pool.query("SELECT id FROM services WHERE id = $1", [service_id])
+      ? await pool.query("SELECT id, user_id FROM services WHERE id = $1", [service_id])
       : null;
     if (service_id && serviceCheck.rows.length === 0) {
       return res.status(404).json({ message: "Service not found." });
+    }
+    if (service_id && serviceCheck.rows[0].user_id !== provider_id) {
+      return res.status(400).json({ message: "The selected service does not belong to this provider." });
+    }
+
+    const completedBooking = service_id
+      ? await pool.query(
+          `SELECT 1 FROM bookings b JOIN services s ON b.service_id = s.id
+           WHERE b.client_id = $1 AND s.user_id = $2 AND b.service_id = $3 AND b.status = 'completed' LIMIT 1`,
+          [reviewer_id, provider_id, service_id]
+        )
+      : await pool.query(
+          `SELECT 1 FROM bookings b JOIN services s ON b.service_id = s.id
+           WHERE b.client_id = $1 AND s.user_id = $2 AND b.status = 'completed' LIMIT 1`,
+          [reviewer_id, provider_id]
+        );
+
+    if (completedBooking.rows.length === 0) {
+      return res.status(403).json({ message: "You can only review providers after completing a booking with them." });
     }
 
     const insert = await pool.query(
