@@ -194,9 +194,14 @@
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
     .left-panel { display: none; }
-    .right-panel { padding: 2rem 1.5rem; }
+    .right-panel { padding: 2rem 1.25rem; }
+    .form-container { max-width: 100%; }
+    .role-toggle { grid-template-columns: 1fr; }
+    .role-label { justify-content: center; }
+    .terms-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .divider { margin: 1.5rem 0; }
   }
 </style>
 </head>

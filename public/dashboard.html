@@ -191,6 +191,22 @@
     .main { margin-left: 60px; padding: 1.5rem; }
     .form-row { grid-template-columns: 1fr; }
   }
+  @media (max-width: 600px) {
+    body { flex-direction: column; }
+    .sidebar {
+      width: 100%; height: auto; position: fixed; top: 0; left: 0;
+      flex-direction: row; align-items: center; justify-content: space-between;
+      padding: 0.8rem 1rem;
+    }
+    .sidebar-logo, .sidebar-user, .sidebar-nav, .sidebar-bottom { display: none; }
+    .sidebar-logo { display: flex; align-items: center; justify-content: center; width: 100%; }
+    .sidebar-logo a::before { content: 'SH'; font-size: 1.1rem; }
+    .main { margin-left: 0; padding: 1rem 0.9rem 0.75rem; }
+    .page-header h1 { font-size: 1.6rem; }
+    .stats-row { gap: 0.9rem; }
+    .card { padding: 1.2rem; }
+    table th, table td { padding: 0.65rem 0.8rem; }
+  }
 </style>
 </head>
 <body>
